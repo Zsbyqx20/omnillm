@@ -1,0 +1,67 @@
+name: python-ci
+on: 
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  python-ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: change-detect
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            py-files:
+              - "src/**/*.py"
+              - "tests/**/*.py"
+            dependency:
+              - "pyproject.toml"
+
+      - name: Setup PDM
+        if: steps.filter.outputs.py-files == 'true' || steps.filter.outputs.dependency == 'true'
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: 3.11
+          cache: true
+        
+      - name: Install dependencies
+        if: steps.filter.outputs.py-files == 'true' || steps.filter.outputs.dependency == 'true'
+        run: pdm install
+
+      - name: Format code
+        if: steps.filter.outputs.py-files == 'true'
+        run: pdm run format
+
+      - name: Lint code
+        if: steps.filter.outputs.py-files == 'true'
+        run: pdm run check
+
+      - name: Run tests
+        if: steps.filter.outputs.py-files == 'true' || steps.filter.outputs.dependency == 'true'
+        run: pdm run ci_test
+      
+      - name: Check for modified files
+        if: steps.filter.outputs.py-files == 'true'
+        id: modify
+        run: echo modified=$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi) >> $GITHUB_OUTPUT
+      
+      - name: Push Changes
+        if: steps.filter.outputs.py-files == 'true' && steps.modify.outputs.modified == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "refactor: apply code formatting"
+          git push
