@@ -6,7 +6,7 @@ authors = [
     {name = "Zsbyqx20", email = "112002598+Zsbyqx20@users.noreply.github.com"},
 ]
 dependencies = ["openai>=1.54.4", "anthropic>=0.39.0", "python-dotenv>=1.0.1", "httpx[socks]>=0.27.2", "pillow>=11.0.0", "requests>=2.32.3"]
-requires-python = "==3.12.*"
+requires-python = ">=3.12"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 classifiers = [
@@ -24,9 +24,11 @@ classifiers = [
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
+[tool.pdm.build]
+excludes = ["tests/"]
+
 [tool.pdm]
 distribution = true
-excludes = ["tests/"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
