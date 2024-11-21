@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Any, Generic, TypeVar, Union
 
 from dotenv import load_dotenv
+from PIL import Image
 
 load_dotenv()
 
@@ -44,7 +45,7 @@ class ServiceType(Enum):
     ANTHROPIC = "anthropic"
 
 
-MessageInput = Union[str, dict[str, Any], "BaseMessage"]
+MessageInput = Union[str, dict[str, Any], "BaseMessage", Image.Image]
 
 
 class BaseMessage(Generic[T]):

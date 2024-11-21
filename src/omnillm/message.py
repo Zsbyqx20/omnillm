@@ -59,6 +59,13 @@ def convert_to_message(msg: MessageInput) -> BaseMessage:
     if isinstance(msg, str):
         return TextMessage(content=msg, role=Role.USER)
 
+    if isinstance(msg, Image.Image):
+        if msg.format:
+            format_ = ImageFormat[msg.format.upper()]
+        else:
+            format_ = ImageFormat.PNG
+        return ImageMessage(content=msg, format=format_)
+
     if isinstance(msg, dict):
         msg_dict: MessageDict = {
             "content": msg["content"],
@@ -66,14 +73,13 @@ def convert_to_message(msg: MessageInput) -> BaseMessage:
             "type": msg.get("type", "text"),
         }
 
-        content_type = ContentType(msg_dict["type"])
         role = Role(msg_dict["role"])
 
-        if content_type == ContentType.TEXT:
+        if msg_dict["type"] == ContentType.TEXT.value:
             if not isinstance(msg_dict["content"], str):
                 raise ValueError("Invalid text message format")
             return TextMessage(content=msg_dict["content"], role=role)
-        elif content_type == ContentType.IMAGE:
+        elif msg_dict["type"] == ContentType.IMAGE.value:
             if not isinstance(msg_dict["content"], (str, Image.Image)):
                 raise ValueError("Image content must be either string or PIL.Image")
             return ImageMessage(
@@ -81,6 +87,6 @@ def convert_to_message(msg: MessageInput) -> BaseMessage:
                 format=ImageFormat(msg.get("format", "png")),
                 detail=ImageDetail(msg.get("detail", "auto")),
             )
-        raise ValueError(f"Unsupported content type: {content_type}")
+        raise ValueError(f"Unsupported content type: {msg_dict['type']}")
 
     raise ValueError(f"Unsupported message type: {type(msg)}")

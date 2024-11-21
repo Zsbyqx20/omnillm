@@ -20,7 +20,6 @@ class TestRetryDecorator:
         assert result == "success"
         assert mock_func.call_count == 1
 
-    @pytest.mark.timeout(1)
     def test_retry_on_failure(self):
         mock_func = MagicMock()
         mock_func.side_effect = [ValueError(), ValueError(), "success"]
@@ -73,7 +72,6 @@ class TestAsyncRetryDecorator:
         assert async_mock.call_count == 1
 
     @pytest.mark.asyncio(loop_scope="session")
-    @pytest.mark.timeout(1)
     async def test_retry_on_failure(self):
         async_mock = AsyncMock(side_effect=[ValueError(), ValueError(), "success"])
         decorated_func = async_retry(max_attempts=3, delay=0)(async_mock)

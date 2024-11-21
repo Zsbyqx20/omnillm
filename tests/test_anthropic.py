@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from PIL import Image
 
 from omnillm.anthropic import AnthropicClient, process_content_block_default
-from omnillm.base import BaseMessage, Role, ServiceType
+from omnillm.base import BaseMessage, ImageDetail, ImageFormat, Role, ServiceType
 from omnillm.message import ImageMessage, TextMessage
 
 load_dotenv()
@@ -456,3 +456,334 @@ class TestAnthropicClient:
             "extra_param": "test",
             "another_param": 123,
         }
+
+    def test_organize_messages_multiple_images(self, client, sample_image, mocker):
+        # Mock base64 encoding for multiple images
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        messages = [
+            ImageMessage(sample_image),
+            ImageMessage(
+                sample_image, format=ImageFormat.JPEG, detail=ImageDetail.HIGH
+            ),
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": "mock_base64",
+                        },
+                    },
+                ],
+            }
+        ]
+
+    def test_organize_messages_text_image_alternating(
+        self, client, sample_image, mocker
+    ):
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        messages = [
+            TextMessage("First text", role=Role.USER),
+            ImageMessage(sample_image),
+            TextMessage("Response", role=Role.ASSISTANT),
+            TextMessage("Second text", role=Role.USER),
+            ImageMessage(sample_image, format=ImageFormat.JPEG),
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "First text"},
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                ],
+            },
+            {"role": "assistant", "content": "Response"},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Second text"},
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": "mock_base64",
+                        },
+                    },
+                ],
+            },
+        ]
+
+    def test_organize_messages_image_with_different_formats(
+        self, client, sample_image, mocker
+    ):
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        messages = [
+            ImageMessage(sample_image, format=ImageFormat.PNG, detail=ImageDetail.LOW),
+            ImageMessage(
+                sample_image, format=ImageFormat.JPEG, detail=ImageDetail.HIGH
+            ),
+            ImageMessage(
+                sample_image, format=ImageFormat.WEBP, detail=ImageDetail.AUTO
+            ),
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/webp",
+                            "data": "mock_base64",
+                        },
+                    },
+                ],
+            }
+        ]
+
+    def test_organize_messages_system_with_images(self, client, sample_image, mocker):
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        messages = [
+            TextMessage("System prompt", role=Role.SYSTEM),
+            ImageMessage(sample_image),
+            TextMessage("Description", role=Role.USER),
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {"role": "system", "content": "System prompt"},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {"type": "text", "text": "Description"},
+                ],
+            },
+        ]
+
+    def test_organize_messages_with_raw_inputs(self, client, sample_image, mocker):
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        messages = [
+            "Hello",  # raw string
+            sample_image,  # raw PIL Image
+            TextMessage("Response", role=Role.ASSISTANT),
+            "Follow-up question",  # raw string
+            sample_image,  # raw PIL Image
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Hello"},
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                ],
+            },
+            {"role": "assistant", "content": "Response"},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Follow-up question"},
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                ],
+            },
+        ]
+
+    def test_organize_messages_mixed_inputs(self, client, sample_image, mocker):
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        # Set format on the image for testing format detection
+        sample_image.format = "JPEG"
+
+        messages = [
+            {
+                "role": "system",
+                "type": "text",
+                "content": "System prompt",
+            },  # dict input
+            sample_image,  # raw PIL Image with JPEG format
+            "Describe this image",  # raw string
+            {  # dict input for image
+                "role": "user",
+                "type": "image",
+                "content": sample_image,
+                "format": "webp",
+                "detail": "high",
+            },
+            TextMessage("What do you think?", role=Role.USER),  # TextMessage object
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {"role": "system", "content": "System prompt"},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {"type": "text", "text": "Describe this image"},
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/webp",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {"type": "text", "text": "What do you think?"},
+                ],
+            },
+        ]
+
+    def test_organize_messages_with_dict_and_raw_inputs(
+        self, client, sample_image, mocker
+    ):
+        mocker.patch(
+            "omnillm.message.ImageMessage.content",
+            property(lambda self: "mock_base64"),
+        )
+
+        messages = [
+            {  # dict input for text
+                "role": "user",
+                "type": "text",
+                "content": "First message",
+            },
+            sample_image,  # raw PIL Image
+            {  # dict input for image
+                "role": "user",
+                "type": "image",
+                "content": sample_image,
+                "format": "jpeg",
+                "detail": "low",
+            },
+            "Final question",  # raw string
+        ]
+
+        organized = client.organize_messages(messages)
+
+        assert organized == [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "First message"},
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/png",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": "mock_base64",
+                        },
+                    },
+                    {"type": "text", "text": "Final question"},
+                ],
+            },
+        ]

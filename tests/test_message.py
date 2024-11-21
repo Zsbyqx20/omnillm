@@ -149,13 +149,13 @@ class TestConvertDictToMessage:
             convert_to_message(msg_dict)  # type: ignore
 
     def test_invalid_content_type(self):
-        msg_dict = {
+        msg_dict: MessageDict = {
             "role": "user",
-            "type": "invalid",
-            "content": "test",
+            "type": "whatever",
+            "content": {"nested": "dict"},  # type: ignore
         }
 
-        with pytest.raises(ValueError, match="'invalid' is not a valid ContentType"):
+        with pytest.raises(ValueError, match="Unsupported content type: whatever"):
             convert_to_message(msg_dict)  # type: ignore
 
     def test_invalid_image_content_type(self):
@@ -175,3 +175,19 @@ class TestConvertDictToMessage:
     def test_convert_unsupported_type_to_message(self):
         with pytest.raises(ValueError, match="Unsupported message type: <class 'int'>"):
             convert_to_message(123)  # type: ignore
+
+    def test_convert_image_to_message(self, sample_image):
+        message = convert_to_message(sample_image)  # type: ignore
+
+        assert isinstance(message, ImageMessage)
+        assert isinstance(message._content, Image.Image)
+        assert message.role == Role.USER
+        assert message.content_type == ContentType.IMAGE
+        assert message._format == ImageFormat.PNG
+
+    def test_convert_image_with_format(self, sample_image):
+        sample_image.format = "JPEG"
+        message = convert_to_message(sample_image)  # type: ignore
+
+        assert isinstance(message, ImageMessage)
+        assert message._format == ImageFormat.JPEG
