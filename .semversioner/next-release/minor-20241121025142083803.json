@@ -1,4 +1,0 @@
-{
-  "type": "minor",
-  "description": "Support better simplification of MessageInput, the Image object can be passed to be user message."
-}

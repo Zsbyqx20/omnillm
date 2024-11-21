@@ -1,0 +1,14 @@
+{
+  "changes": [
+    {
+      "description": "Support better simplification of MessageInput, the Image object can be passed to be user message.",
+      "type": "minor"
+    },
+    {
+      "description": "Update dependencies to >=3.12, and adjust the build excludes option.",
+      "type": "patch"
+    }
+  ],
+  "created_at": "2024-11-21T03:17:16+00:00",
+  "version": "0.2.0"
+}
