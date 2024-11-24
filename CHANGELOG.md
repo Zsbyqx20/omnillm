@@ -1,6 +1,10 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.2.1
+
+- patch: Removed MessageInput type; Fixed the type annotation for call.
+
 ## 0.2.0
 
 - minor: Support better simplification of MessageInput, the Image object can be passed to be user message.
