@@ -87,7 +87,7 @@ class BaseClient(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def organize_messages(self, messages: list[BaseMessage]):
+    def organize_messages(self, messages):
         raise NotImplementedError
 
     def _validate_message_sequence(self, messages: list[BaseMessage]):
