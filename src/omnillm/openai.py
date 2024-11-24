@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Callable, Sequence, TypeVar, cast
+from typing import Any, Callable, Sequence, TypeVar, cast, overload
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAI, PermissionDeniedError
 from openai.types.chat import ChatCompletion
+from PIL import Image
 
 from .base import (
     BaseClient,
     BaseMessage,
-    MessageInput,
     Role,
     ServiceType,
 )
@@ -60,7 +60,7 @@ class OpenAIClient(BaseClient):
         return {"role": "user", "content": contents.copy()}
 
     def organize_messages(
-        self, messages: Sequence[MessageInput]
+        self, messages: Sequence[str | dict[str, Any] | Image.Image]
     ) -> list[dict[str, Any]]:
         processed_messages = [
             msg if isinstance(msg, BaseMessage) else convert_to_message(msg)
@@ -105,7 +105,7 @@ class OpenAIClient(BaseClient):
 
     def _prepare_request(
         self,
-        messages: list[MessageInput],
+        messages: Sequence[str | dict[str, Any] | Image.Image],
         model: str,
         temperature: float,
         **kwargs: Any,
@@ -119,10 +119,70 @@ class OpenAIClient(BaseClient):
         }
         return prompt, params
 
+    @overload
+    def call(
+        self,
+        messages: Sequence[str],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[str],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
     @retry(max_attempts=3, skip_exceptions=(AuthenticationError, PermissionDeniedError))
     def call(
         self,
-        messages: list[MessageInput],
+        messages: Sequence[str | dict[str, Any] | Image.Image],
         model: str = "gpt-4o-mini",
         temperature: float = 0.5,
         callback: Callable[[str], T] | None = None,
@@ -139,12 +199,72 @@ class OpenAIClient(BaseClient):
             return callback(resp_obj)
         return resp_obj
 
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[str],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[str],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
     @async_retry(
         max_attempts=3, skip_exceptions=(AuthenticationError, PermissionDeniedError)
     )
     async def async_call(
         self,
-        messages: list[MessageInput],
+        messages: Sequence[str | dict[str, Any] | Image.Image],
         model: str = "gpt-4o-mini",
         temperature: float = 0.5,
         callback: Callable[[str], T] | None = None,

@@ -5,10 +5,9 @@
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Generic, TypeVar, Union
+from typing import Generic, TypeVar
 
 from dotenv import load_dotenv
-from PIL import Image
 
 load_dotenv()
 
@@ -43,9 +42,6 @@ class ImageDetail(Enum):
 class ServiceType(Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-
-
-MessageInput = Union[str, dict[str, Any], "BaseMessage", Image.Image]
 
 
 class BaseMessage(Generic[T]):
