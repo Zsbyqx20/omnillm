@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Callable, Sequence, TypeVar, cast
+from typing import Any, Callable, Sequence, TypeVar, cast, overload
 
 from anthropic import Anthropic, AsyncAnthropic
 from anthropic._exceptions import AuthenticationError, PermissionDeniedError
@@ -10,11 +10,11 @@ from anthropic.types.content_block import ContentBlock
 from anthropic.types.message import Message
 from anthropic.types.text_block import TextBlock
 from anthropic.types.tool_use_block import ToolUseBlock
+from PIL import Image
 
 from .base import (
     BaseClient,
     BaseMessage,
-    MessageInput,
     Role,
     ServiceType,
 )
@@ -75,7 +75,7 @@ class AnthropicClient(BaseClient):
         return {"role": "user", "content": contents.copy()}
 
     def organize_messages(
-        self, messages: Sequence[MessageInput]
+        self, messages: Sequence[str | dict[str, Any] | Image.Image]
     ) -> list[dict[str, Any]]:
         processed_messages = [
             msg if isinstance(msg, BaseMessage) else convert_to_message(msg)
@@ -116,7 +116,7 @@ class AnthropicClient(BaseClient):
 
     def _prepare_request(
         self,
-        messages: list[MessageInput],
+        messages: Sequence[str | dict[str, Any] | Image.Image],
         model: str = "claude-3-sonnet-20240229",
         temperature: float = 0.5,
         **kwargs: Any,
@@ -138,10 +138,70 @@ class AnthropicClient(BaseClient):
             params["system"] = system_msg["content"]
         return prompt, params
 
+    @overload
+    def call(
+        self,
+        messages: Sequence[str],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[str],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
     @retry(max_attempts=3, skip_exceptions=(AuthenticationError, PermissionDeniedError))
     def call(
         self,
-        messages: list[MessageInput],
+        messages: Sequence[str | dict[str, Any] | Image.Image],
         model: str = "claude-3-5-haiku-20241022",
         temperature: float = 0.5,
         callback: Callable[[ContentBlock], T] | None = None,
@@ -155,12 +215,72 @@ class AnthropicClient(BaseClient):
             return callback(resp_obj)
         return process_content_block_default(resp_obj)
 
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[str],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[str],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[dict[str, Any]],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: None = None,
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> str: ...
+    @overload
+    def async_call(
+        self,
+        messages: Sequence[Image.Image],
+        callback: Callable[[str], T],
+        *,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.5,
+        **kwargs: Any,
+    ) -> T: ...
     @async_retry(
         max_attempts=3, skip_exceptions=(AuthenticationError, PermissionDeniedError)
     )
     async def async_call(
         self,
-        messages: list[MessageInput],
+        messages: list[str | dict[str, Any] | Image.Image],
         model: str = "claude-3-5-haiku-20241022",
         temperature: float = 0.5,
         callback: Callable[[ContentBlock], T] | None = None,

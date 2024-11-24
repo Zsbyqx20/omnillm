@@ -1,0 +1,4 @@
+{
+  "type": "patch",
+  "description": "Removed MessageInput type; Fixed the type annotation for call."
+}

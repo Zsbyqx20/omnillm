@@ -4,11 +4,11 @@
 
 import base64
 import io
-from typing import NotRequired, TypedDict, Union
+from typing import Any, NotRequired, TypedDict, Union, overload
 
 from PIL import Image
 
-from .base import BaseMessage, ContentType, ImageDetail, ImageFormat, MessageInput, Role
+from .base import BaseMessage, ContentType, ImageDetail, ImageFormat, Role
 from .utils import is_valid_image_url
 
 MessageDict = TypedDict(
@@ -55,7 +55,15 @@ class ImageMessage(BaseMessage[Image.Image]):
         return self._detail
 
 
-def convert_to_message(msg: MessageInput) -> BaseMessage:
+@overload
+def convert_to_message(msg: str) -> TextMessage: ...
+@overload
+def convert_to_message(msg: Image.Image) -> ImageMessage: ...
+@overload
+def convert_to_message(msg: dict[str, Any]) -> BaseMessage: ...
+
+
+def convert_to_message(msg: str | Image.Image | dict[str, Any]) -> BaseMessage:
     if isinstance(msg, str):
         return TextMessage(content=msg, role=Role.USER)
 
