@@ -1,6 +1,10 @@
 # Changelog
 Note: version releases in the 0.x.y range may introduce breaking changes.
 
+## 0.2.2
+
+- patch: Fix overload type annotation for async_call
+
 ## 0.2.1
 
 - patch: Removed MessageInput type; Fixed the type annotation for call.

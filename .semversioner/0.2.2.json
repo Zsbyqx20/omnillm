@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "description": "Fix overload type annotation for async_call",
+      "type": "patch"
+    }
+  ],
+  "created_at": "2024-11-25T02:27:34+00:00",
+  "version": "0.2.2"
+}

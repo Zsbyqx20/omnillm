@@ -216,7 +216,7 @@ class AnthropicClient(BaseClient):
         return process_content_block_default(resp_obj)
 
     @overload
-    def async_call(
+    async def async_call(
         self,
         messages: Sequence[str],
         callback: None = None,
@@ -226,7 +226,7 @@ class AnthropicClient(BaseClient):
         **kwargs: Any,
     ) -> str: ...
     @overload
-    def async_call(
+    async def async_call(
         self,
         messages: Sequence[str],
         callback: Callable[[str], T],
@@ -236,7 +236,7 @@ class AnthropicClient(BaseClient):
         **kwargs: Any,
     ) -> T: ...
     @overload
-    def async_call(
+    async def async_call(
         self,
         messages: Sequence[dict[str, Any]],
         callback: None = None,
@@ -246,7 +246,7 @@ class AnthropicClient(BaseClient):
         **kwargs: Any,
     ) -> str: ...
     @overload
-    def async_call(
+    async def async_call(
         self,
         messages: Sequence[dict[str, Any]],
         callback: Callable[[str], T],
@@ -256,7 +256,7 @@ class AnthropicClient(BaseClient):
         **kwargs: Any,
     ) -> T: ...
     @overload
-    def async_call(
+    async def async_call(
         self,
         messages: Sequence[Image.Image],
         callback: None = None,
@@ -266,7 +266,7 @@ class AnthropicClient(BaseClient):
         **kwargs: Any,
     ) -> str: ...
     @overload
-    def async_call(
+    async def async_call(
         self,
         messages: Sequence[Image.Image],
         callback: Callable[[str], T],

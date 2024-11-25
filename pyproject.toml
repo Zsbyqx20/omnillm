@@ -1,6 +1,6 @@
 [project]
 name = "omnillm"
-version = "0.2.1"
+version = "0.2.2"
 description = "A unified LLM API utility package."
 authors = [
     {name = "Zsbyqx20", email = "112002598+Zsbyqx20@users.noreply.github.com"},
